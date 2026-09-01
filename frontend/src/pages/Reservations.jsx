@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Calendar, Eye, X } from 'lucide-react';
+import { Plus, Calendar, Eye, X, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { reservationsAPI, carsAPI, clientsAPI } from '../utils/api';
 import { Badge, Modal, Field, PageHeader, SearchBar, EmptyState, Spinner, formatCurrency, formatDate, calcDays } from '../components/shared';
+import LiveTracking from '../components/shared/LiveTracking';
 
 export default function ReservationsPage() {
   const qc = useQueryClient();
@@ -11,6 +12,7 @@ export default function ReservationsPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [showAdd, setShowAdd] = useState(false);
   const [showDetail, setShowDetail] = useState(null);
+  const [showTracking, setShowTracking] = useState(null);
   const [form, setForm] = useState({ client_id: '', car_id: '', start_date: '', end_date: '', pickup_location: '', return_location: '', deposit_amount: 0, notes: '' });
 
   const { data: reservations = [], isLoading } = useQuery({ queryKey: ['reservations', statusFilter], queryFn: () => reservationsAPI.getAll(statusFilter ? { status: statusFilter } : {}) });
@@ -97,6 +99,11 @@ export default function ReservationsPage() {
                 </div>
                 <Badge status={r.status} />
                 <div className="flex gap-2">
+                  {r.status === 'active' && (
+                    <button onClick={() => setShowTracking(r)} className="btn-primary text-xs py-1.5 px-3">
+                      <MapPin size={13} /> Suivre
+                    </button>
+                  )}
                   <button onClick={() => setShowDetail(r)} className="btn-secondary text-xs py-1.5 px-3"><Eye size={13} /></button>
                   {r.status === 'pending' && (
                     <button onClick={() => updateMut.mutate({ id: r.id, data: { status: 'confirmed' } })} className="btn-primary text-xs py-1.5 px-3">Confirmer</button>
@@ -158,6 +165,18 @@ export default function ReservationsPage() {
               </div>
             ))}
           </div>
+        )}
+      </Modal>
+
+      <Modal open={!!showTracking} onClose={() => setShowTracking(null)}
+        title={showTracking ? `Suivi en temps réel — ${showTracking.brand} ${showTracking.model} (${showTracking.plate})` : ''} size="xl">
+        {showTracking && (
+          <LiveTracking
+            car={{ brand: showTracking.brand, model: showTracking.model, plate: showTracking.plate }}
+            client={`${showTracking.first_name} ${showTracking.last_name}`}
+            pickup={showTracking.pickup_location}
+            dropoff={showTracking.return_location}
+          />
         )}
       </Modal>
     </div>
