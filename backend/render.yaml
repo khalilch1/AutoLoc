@@ -3,22 +3,18 @@ services:
     name: autoloc-pro-api
     env: node
     region: frankfurt
-    plan: starter
+    plan: free
     buildCommand: npm install
     startCommand: npm start
-    disk:
-      name: autoloc-data
-      mountPath: /data
-      sizeGB: 1
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 5000
       - key: DB_PATH
-        value: /data/database.sqlite
+        value: ./database.sqlite
       - key: UPLOADS_DIR
-        value: /data/uploads
+        value: ./uploads
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_EXPIRES_IN
