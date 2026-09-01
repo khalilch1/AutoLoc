@@ -1,7 +1,9 @@
-import { useQuery } from '@tanstack/react-query';
-import { Car, Users, Calendar, DollarSign, AlertTriangle, TrendingUp } from 'lucide-react';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Car, Users, Calendar, DollarSign, AlertTriangle, TrendingUp, Sparkles } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { dashboardAPI } from '../utils/api';
+import toast from 'react-hot-toast';
+import { dashboardAPI, demoAPI } from '../utils/api';
 import { StatCard, Spinner, formatCurrency, formatDate } from '../components/shared';
 import { Badge } from '../components/shared';
 import useAuthStore from '../context/authStore';
@@ -10,7 +12,22 @@ const STATUS_COLORS = { available: '#10B981', rented: '#3B82F6', maintenance: '#
 
 export default function Dashboard() {
   const { user } = useAuthStore();
+  const qc = useQueryClient();
+  const [seeding, setSeeding] = useState(false);
   const { data: stats, isLoading } = useQuery({ queryKey: ['dashboard'], queryFn: dashboardAPI.getStats, refetchInterval: 30000 });
+
+  const handleSeedDemo = async () => {
+    setSeeding(true);
+    try {
+      const result = await demoAPI.seed();
+      toast.success(`Données de démo créées : ${result.cars} véhicules, ${result.clients} clients !`);
+      qc.invalidateQueries();
+    } catch (e) {
+      toast.error(e.message);
+    } finally {
+      setSeeding(false);
+    }
+  };
 
   if (isLoading) return <Spinner size={40} />;
 
@@ -34,6 +51,19 @@ export default function Dashboard() {
         </h1>
         <p className="text-slate text-sm">{user?.tenantName} — Plan {user?.plan?.toUpperCase()}</p>
       </div>
+
+      {(stats?.totalCars || 0) === 0 && (
+        <div className="mb-6 bg-brand/10 border border-brand/30 rounded-xl p-4 flex items-center gap-4 flex-wrap">
+          <Sparkles size={20} className="text-brand shrink-0" />
+          <div className="flex-1 min-w-[220px]">
+            <div className="font-semibold text-sm">Compte tout neuf — envie de le remplir pour une démo ?</div>
+            <div className="text-xs text-slate mt-0.5">Génère un parc de 12 véhicules réels, 10 clients et un historique de réservations en un clic.</div>
+          </div>
+          <button className="btn-primary text-xs py-2" onClick={handleSeedDemo} disabled={seeding}>
+            {seeding ? 'Génération...' : 'Charger des données de démo'}
+          </button>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
         <StatCard label="Véhicules disponibles" value={`${stats?.availableCars || 0}/${stats?.totalCars || 0}`} icon={Car} color="#3B82F6" trend={8} />

@@ -116,3 +116,7 @@ export const dashboardAPI = {
   getStats: () => api.get('/dashboard/stats'),
   getRevenue: (params) => api.get('/reports/revenue', { params }),
 };
+
+export const demoAPI = {
+  seed: () => api.post('/demo/seed'),
+};

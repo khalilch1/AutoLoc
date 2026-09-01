@@ -5,6 +5,7 @@ const authCtrl = require('../controllers/authController');
 const carsCtrl = require('../controllers/carsController');
 const clientsCtrl = require('../controllers/clientsController');
 const resCtrl = require('../controllers/reservationsController');
+const { seedDemoData } = require('../controllers/demoSeedController');
 const {
   contractsGetAll, contractsCreate, contractsClose, contractPdf,
   invoicesGetAll, invoicesCreate, invoicesUpdate,
@@ -64,6 +65,9 @@ router.put('/invoices/:id', auth, invoicesUpdate);
 // Payments
 router.get('/payments', auth, paymentsGetAll);
 router.post('/payments', auth, paymentsCreate);
+
+// Demo data
+router.post('/demo/seed', auth, seedDemoData);
 
 // Maintenance
 router.get('/maintenance', auth, maintenanceGetAll);
