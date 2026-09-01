@@ -215,9 +215,9 @@ const dashboardStats = (req, res) => {
   const tid = req.tenantId;
   const month = new Date().toISOString().slice(0, 7);
 
-  const totalCars = db.prepare('SELECT COUNT(*) as c FROM cars WHERE tenant_id=? AND status != "retired"').get(tid).c;
-  const availableCars = db.prepare('SELECT COUNT(*) as c FROM cars WHERE tenant_id=? AND status="available"').get(tid).c;
-  const totalClients = db.prepare('SELECT COUNT(*) as c FROM clients WHERE tenant_id=? AND status != "inactive"').get(tid).c;
+  const totalCars = db.prepare("SELECT COUNT(*) as c FROM cars WHERE tenant_id=? AND status != 'retired'").get(tid).c;
+  const availableCars = db.prepare("SELECT COUNT(*) as c FROM cars WHERE tenant_id=? AND status='available'").get(tid).c;
+  const totalClients = db.prepare("SELECT COUNT(*) as c FROM clients WHERE tenant_id=? AND status != 'inactive'").get(tid).c;
   const activeReservations = db.prepare(`SELECT COUNT(*) as c FROM reservations WHERE tenant_id=? AND status IN ('active','confirmed')`).get(tid).c;
   const monthRevenue = db.prepare(`SELECT COALESCE(SUM(total),0) as total FROM invoices WHERE tenant_id=? AND status='paid' AND issue_date LIKE ?`).get(tid, `${month}%`).total;
   const pendingAmount = db.prepare(`SELECT COALESCE(SUM(total),0) as total FROM invoices WHERE tenant_id=? AND status='pending'`).get(tid).total;
@@ -235,7 +235,7 @@ const dashboardStats = (req, res) => {
     WHERE r.tenant_id=? ORDER BY r.created_at DESC LIMIT 5
   `).all(tid);
 
-  const carsByStatus = db.prepare('SELECT status, COUNT(*) as count FROM cars WHERE tenant_id=? AND status != "retired" GROUP BY status').all(tid);
+  const carsByStatus = db.prepare("SELECT status, COUNT(*) as count FROM cars WHERE tenant_id=? AND status != 'retired' GROUP BY status").all(tid);
   const topCars = db.prepare(`SELECT ca.brand, ca.model, ca.plate, COUNT(r.id) as rentals FROM cars ca LEFT JOIN reservations r ON ca.id=r.car_id WHERE ca.tenant_id=? GROUP BY ca.id ORDER BY rentals DESC LIMIT 5`).all(tid);
 
   res.json({ totalCars, availableCars, totalClients, activeReservations, monthRevenue, pendingAmount, upcomingMaint, revenueByMonth, recentReservations, carsByStatus, topCars });
